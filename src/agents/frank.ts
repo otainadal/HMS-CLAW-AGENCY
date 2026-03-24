@@ -103,7 +103,8 @@ export class Frank {
       const response = await this.client.messages.create({
         model: config.anthropic.model,
         max_tokens: 8192,
-        thinking: { type: 'adaptive' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        thinking: { type: 'adaptive' } as any,
         system: HMS_SYSTEM_PROMPT,
         tools: FRANK_TOOLS,
         messages: this.conversationHistory,

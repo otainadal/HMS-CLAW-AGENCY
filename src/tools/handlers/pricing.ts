@@ -89,16 +89,17 @@ async function previewPricingChange(
 
   // Get property name
   const supabase = getSupabase();
-  const { data: prop } = await supabase
+  const { data: propData } = await supabase
     .from('properties')
     .select('name')
     .eq('id', property_id)
     .single();
+  const prop = propData as { name: string } | null;
 
   // Calculate diff
   const diff: Record<string, { from: unknown; to: unknown }> = {};
   for (const [key, newVal] of Object.entries(new_pricing)) {
-    const oldVal = (currentRule as Record<string, unknown>)[key];
+    const oldVal = (currentRule as unknown as Record<string, unknown>)[key];
     if (oldVal !== newVal) {
       diff[key] = { from: oldVal, to: newVal };
     }
@@ -125,16 +126,17 @@ async function applyPricingChange(
   // Backup current pricing before changing
   const current = await getCurrentPricing(property_id, platform);
   if (current.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await supabase.from('pricing_rules_history').insert({
-      ...current[0],
+      ...(current[0] as unknown as Record<string, unknown>),
       archived_at: new Date().toISOString(),
       archive_reason: reason ?? 'Cambio de precio vía HMS OS',
-    });
+    } as any);
   }
 
   // Apply new pricing
-  let query = supabase
-    .from('pricing_rules')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = (supabase.from('pricing_rules') as any)
     .update({ ...new_pricing, updated_at: new Date().toISOString() })
     .eq('property_id', property_id);
 
@@ -174,13 +176,14 @@ async function rollbackPricing(property_id: string, platform?: string): Promise<
   if (histError) throw new Error(histError.message);
   if (!history || history.length === 0) throw new Error('No hay historial de precios para rollback');
 
-  const previous = { ...history[0] };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const previous = { ...(history[0] as any) } as Record<string, unknown>;
   delete previous.archived_at;
   delete previous.archive_reason;
 
   // Restore
-  let updateQuery = supabase
-    .from('pricing_rules')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let updateQuery: any = (supabase.from('pricing_rules') as any)
     .update({ ...previous, updated_at: new Date().toISOString() })
     .eq('property_id', property_id);
 

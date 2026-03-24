@@ -85,8 +85,8 @@ async function getRevenue(property_id?: string, period_start?: string, period_en
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  const reservations = data ?? [];
-  const total = reservations.reduce((sum, r) => sum + (r.total_amount ?? 0), 0);
+  const reservations = (data ?? []) as Array<Record<string, unknown>>;
+  const total = reservations.reduce((sum, r) => sum + ((r.total_amount as number) ?? 0), 0);
 
   return {
     reservations,
@@ -125,11 +125,12 @@ async function calculateNetPayout(
   const supabase = getSupabase();
 
   // Get property name
-  const { data: prop } = await supabase
+  const { data: propData } = await supabase
     .from('properties')
     .select('name')
     .eq('id', property_id)
     .single();
+  const prop = propData as { name: string } | null;
 
   // Get revenue
   const { reservations, total_revenue } = (await getRevenue(property_id, period_start, period_end)) as {
@@ -176,7 +177,8 @@ async function createExpense(expenseData: Record<string, unknown>): Promise<unkn
   };
 
   const supabase = getSupabase();
-  const { data, error } = await supabase.from('expenses').insert(expense).select().single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await supabase.from('expenses').insert(expense as any).select().single();
   if (error) throw new Error(error.message);
 
   await logAudit({

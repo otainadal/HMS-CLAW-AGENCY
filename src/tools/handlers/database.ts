@@ -94,7 +94,8 @@ async function queryTable(input: Record<string, unknown>) {
   const filters = input.filters as Record<string, unknown> | undefined;
   if (filters) {
     for (const [col, val] of Object.entries(filters)) {
-      query = query.eq(col, val);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query = query.eq(col, val as any);
     }
   }
 
@@ -121,7 +122,8 @@ async function insertRecord(input: Record<string, unknown>) {
   if (!data) throw new Error('data es requerido para insert');
 
   const supabase = getSupabase();
-  const { data: result, error } = await supabase.from(table).insert(data).select();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: result, error } = await supabase.from(table).insert(data as any).select();
   if (error) throw new Error(error.message);
   return result;
 }
@@ -138,7 +140,8 @@ async function updateRecord(input: Record<string, unknown>) {
   }
 
   const supabase = getSupabase();
-  let query = supabase.from(table).update(data);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = (supabase.from(table) as any).update(data);
   for (const [col, val] of Object.entries(filters)) {
     query = query.eq(col, val);
   }

@@ -29,7 +29,8 @@ export async function logAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>): Pro
 
   try {
     const supabase = getSupabase();
-    const { error } = await supabase.from('audit_log').insert(row);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from('audit_log').insert(row as any);
     if (error) {
       console.error('[AUDIT] Warning: No se pudo persistir en audit_log:', error.message);
     }
